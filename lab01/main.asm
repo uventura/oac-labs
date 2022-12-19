@@ -69,7 +69,9 @@ MENU_LOOP:
 	# Change Indicator Position on Menu
 	beqz t1, MENU_LOOP
 	jal CHANGE_MENU_POS
+		
 	j MENU_LOOP
+
 BACK_MENU_LOOP:
 
 EXIT:
@@ -121,6 +123,55 @@ END_PRINT_MAP:
 	addi sp, sp, 16			# sp += 16
 	ret
 
+#==========================+
+#	MENU POSITION      |
+#==========================+
+CHANGE_MENU_POS:
+	li t0, 0xFF200004
+	lb t0, 0(t0)
+	
+	li t1, 'w'
+	beq t0, t1, PRESS_MENU_W
+	
+	li t1, 's'
+	beq t0, t1, PRESS_MENU_S
+	
+	ret
+PRESS_MENU_W:
+	addi a0, s0, -3
+	j END_MENU_POS_SELECTION
+PRESS_MENU_S:
+	addi a0, s0, 3
+END_MENU_POS_SELECTION:
+	li t0, 2
+	beq a0, t0, END_MENU
+	li t0, 14
+	beq a0, t0, BEGIN_MENU
+	j RENDER_MENU_INDICATOR
+END_MENU:
+	li a0, 11
+	j RENDER_MENU_INDICATOR
+BEGIN_MENU:
+	li a0, 5
+RENDER_MENU_INDICATOR:
+	addi sp, sp, -8
+	sw ra, 0(sp)
+	sw a0, 4(sp)
+	
+	mv a1, s1
+	li a2, 15
+	li a3, 0
+	li a4, 0
+	jal BLOCK_SELECTION
+	
+	mv a0, s0
+	li a2, 1
+	jal BLOCK_SELECTION
+	
+	lw s0, 4(sp)
+	lw ra, 0(sp)
+	addi sp, sp, 8
+	ret
 #=============================+
 #	BLOCKS SELECTION      |
 #=============================+
