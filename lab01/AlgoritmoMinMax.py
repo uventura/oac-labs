@@ -73,7 +73,6 @@ def gameScore(rows, columns, gameBoard, currentPlayer, level):
     else:
         return getGameScore(rows, columns, gameBoard, currentPlayer)
 
-
 def getGameScore(rows, columns, gameBoard, isCurrentPlayer):
     score = 0
     for r in range(rows-1, 0, -1):
@@ -110,7 +109,6 @@ def getGameScore(rows, columns, gameBoard, isCurrentPlayer):
             score += evaluatePlaces(places, isCurrentPlayer)
         
     return score
-
 
 def evaluatePlaces(places, isCurrentPlayer):
     if len(places)!=4 and len(places)!=5:
@@ -168,12 +166,43 @@ def evaluatePlaces(places, isCurrentPlayer):
 
         return playerCount
 
+def getAvailableMoves(columns, gameBoard):
+    moves = []
+    for c in range(0, columns):
+        if gameBoard[c][0]==".":
+            moves.append(c)
+        
+    return moves
 
+def doMove(column, rows, player, gameBoard):
+    for r in range(rows-1, 0, -1):
+        if gameBoard[column][r]==".":
+            gameBoard[column][r]=player
+            return
 
-def MinMaxWithAlphaBetaPruning(availableMoves, currentPlayer, level, min, max):
+def MinMaxWithAlphaBetaPruning(availableMoves, currentPlayer, level, min, max, rows, columns, gameBoard):
 
     if(len(availableMoves) == 0 or level <= 0 or isVictory(currentPlayer)):
         score = gameScore(rows, columns, gameBoard, currentPlayer, level)
-        #print("returning score: ", score);
-        return score
+        move = None
+        return [score, move]
+    best = [score, None]
+
+    for i in availableMoves:
+        currentMove = i
+
+        if best[0]>min:
+            min = best[0]
+
+        doMove(currentMove, rows, currentPlayer, gameBoard)
+
+        theMove = MinMaxWithAlphaBetaPruning(getAvailableMoves(columns, gameBoard), currentPlayer, level-1, -max, -min, rows, columns, gameBoard)
+
+        if theMove[0]>best[0]:
+            best[0] = theMove[0]
+            best[1] = currentMove
         
+        if best[0]>max:
+            break
+    
+    return best
