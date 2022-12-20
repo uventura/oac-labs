@@ -4,7 +4,7 @@
  #  Mais detalhes: https://en.wikipedia.org/wiki/Alpha–beta_pruning
  ####################################################################
  ####################################################################
- #     Exemplo do gameboard, sendo X = jogador e O = Machine
+ #  Exemplo do gameboard, sendo "x" = jogador, "o" = Machine e "." = casa vazia
  #                1 2 3 4 5 6 7
  #              1 . . . . . . .
  #              2 . . . . . . .
@@ -14,23 +14,26 @@
  #              6 o o o o . . x
  ####################################################################
 
+
+# Função que verifica se há um jogador no local
 def isPlayerAt(column, row, gameBoard, currentPlayer):
     place = gameBoard[column][row]
     if place != "." and place == currentPlayer:
         return True
     return False
 
-def isVictory(currentPlayer, rows, columns):
+# Função que define a vitoria
+def isVictory(currentPlayer, rows, columns, gameBoard):
 
     for r in range(rows - 1, 0, -1):
         for c in range(0, columns):
             
-            if isPlayerAt(c, r, currentPlayer):
+            if isPlayerAt(c, r, gameBoard, currentPlayer):
                 ## Vertical
                 isWin = True
                 count = 0
                 while (count<4) and (r-count) >= 0 and isWin:
-                    isWin = isPlayerAt(c, r-count, currentPlayer)
+                    isWin = isPlayerAt(c, r-count, gameBoard, currentPlayer)
                     count += 1
                 if isWin and count==4:
                     return True
@@ -39,33 +42,34 @@ def isVictory(currentPlayer, rows, columns):
                 isWin = True
                 count = 0
                 while (count<4) and (c+count) < columns and isWin:
-                    isWin = isPlayerAt(c+count, r, currentPlayer)
+                    isWin = isPlayerAt(c+count, r, gameBoard, currentPlayer)
                     count += 1
                 if isWin and count==4:
                     return True
                 
-                # Diagonal direita
+                ## Diagonal direita
                 isWin = True
                 count = 0
                 while (count<4) and (r-count)>=0 and (c+count)<columns and isWin:
-                    isWin = isPlayerAt(c+count, r-count, currentPlayer)
+                    isWin = isPlayerAt(c+count, r-count, gameBoard, currentPlayer)
                     count += 1
                 if isWin and count==4:
                     return True
 
-                # Diagonal esquerda
+                ## Diagonal esquerda
                 isWin = True
                 count = 0
                 while (count<4) and (r-count)>rows and (c-count)>=0 and isWin:
-                    isWin = isPlayerAt(c-count, r-count, currentPlayer)
+                    isWin = isPlayerAt(c-count, r-count, gameBoard, currentPlayer)
                     count += 1
                 if isWin and count==4:
                     return True
 
     return False
 
+# Função que verifica se houve vitoria e retorna sua pontuação, caso não faz o calculo na função getGameScore
 def gameScore(rows, columns, gameBoard, currentPlayer, level):
-    if isVictory(currentPlayer):
+    if isVictory(currentPlayer, rows, columns, gameBoard):
         if currentPlayer:
             return 10000
         else:
@@ -73,6 +77,7 @@ def gameScore(rows, columns, gameBoard, currentPlayer, level):
     else:
         return getGameScore(rows, columns, gameBoard, currentPlayer)
 
+# Função que faz o calculo da pontuação
 def getGameScore(rows, columns, gameBoard, isCurrentPlayer):
     score = 0
     for r in range(rows-1, 0, -1):
@@ -110,6 +115,7 @@ def getGameScore(rows, columns, gameBoard, isCurrentPlayer):
         
     return score
 
+# Função que calula as posições do tabuleiro, considerando casos especiais
 def evaluatePlaces(places, isCurrentPlayer):
     if len(places)!=4 and len(places)!=5:
         return 0
@@ -126,27 +132,27 @@ def evaluatePlaces(places, isCurrentPlayer):
     
     # Casos Especiais
     if len(places) == 5 and Machine!=0:
-        # | |P|P|P| |
+        #.|.|x|x|x|.|
         if(playerCount==3 and places[1]!="." and places[2]!="." and places[3]!="."):
             return 40
 
-        # |P|P| |P| |
+        #.|x|x|.|x|.|
         if(playerCount==3 and places[0]!="." and places[1]!="." and places[3]!="."):
             return 30
         
-        # | |P|P| |P|
+        #.|.|x|x|.|x|
         if(playerCount==3 and places[1]!="." and places[2]!="." and places[4]!="."):
             return 30
         
-        # |P| |P|P| |
+        #.|x|.|x|x|.|
         if(playerCount==3 and places[0]!="." and places[2]!="." and places[3]!="."):
             return 30
         
-        # | |P| |P|P|
+        #.|.|x|.|x|x|
         if( playerCount==3 and places[1]!="." and places[3]!="." and places[4]!="." ):
             return 30
         
-        # | |P| |P| |
+        #.|.|x|.|x|.|
         if( playerCount==2 and places[1]!="." and places[3]!="." ):
             return 30
         
@@ -166,6 +172,7 @@ def evaluatePlaces(places, isCurrentPlayer):
 
         return playerCount
 
+# Função que avalia os movimentos possiveis de uma coluna
 def getAvailableMoves(columns, gameBoard):
     moves = []
     for c in range(0, columns):
@@ -174,12 +181,14 @@ def getAvailableMoves(columns, gameBoard):
         
     return moves
 
+# Função que executa o movimento
 def doMove(column, rows, player, gameBoard):
     for r in range(rows-1, 0, -1):
         if gameBoard[column][r]==".":
             gameBoard[column][r]=player
             return
 
+# Função recursiva que define o melhor movimento
 def MinMaxWithAlphaBetaPruning(availableMoves, currentPlayer, level, min, max, rows, columns, gameBoard):
 
     if(len(availableMoves) == 0 or level <= 0 or isVictory(currentPlayer)):
