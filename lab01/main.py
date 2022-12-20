@@ -43,7 +43,7 @@ def put_element(board, symbol, col, col_buffer):
         return -1
 
     for row in range(5, -1, -1):
-        if board[row][col] == '+':
+        if board[row][col] == '.':
             board[row][col] = symbol
             return row
         
@@ -141,7 +141,7 @@ def won(board, symbol, row, col):
         return True
     return False
 
-board = [['+' for i in range(7)] for i in range(6)]
+board = [['.' for i in range(7)] for i in range(6)]
 
 col_buffer = [len(board) - 1 for line in range(len(board[0]))]
 
