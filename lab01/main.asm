@@ -16,24 +16,7 @@
 	.include "sprites/O.s"			# 14
 	
 	.include "sprites/indicator_two.s"			# 15
-	
-MAP_2:
-	.byte 
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+
 MAP_1:
 	.byte 
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -52,15 +35,45 @@ MAP_1:
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 
-.text	
+MAP_2:
+	.byte 
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	
+CURRENT_HEIGHTS: .byte 0,0,0,0,0,0,0
+
+.text
+
+#==================+
+#	MAIN	   |	
+#==================+
+
 MAIN:
 	li s0, 5 # Menu Indicator Line Position
 	li s1, 5 # Menu Indicator Col Position
-	li s2, 6 # Player Col
+	li s2, 1 # Dificult Level
+	li s3, 6 # Player Col
 
 	la a0, MAP_1
 	jal PRINT_MAP
-	
+
+#=======================+
+#	MENU_LOOP	|
+#=======================+
+
 MENU_LOOP:
 	li t0, 0xFF200000
 	lw t1, 0(t0)
@@ -71,8 +84,31 @@ MENU_LOOP:
 	jal CHANGE_MENU_POS
 		
 	j MENU_LOOP
-
 BACK_MENU_LOOP:
+
+#=======================+
+#	GAME LOOP	|
+#=======================+
+
+RENDER_MAP:
+	la a0, MAP_2
+	jal PRINT_MAP
+
+GAME_LOOP:
+	li t0, 0xFF200000
+	lw t1, 0(t0)
+	andi t1, t1, 0x00000001
+		
+	# Change Indicator Position on Menu
+	beqz t1, GAME_LOOP
+	jal PLAYER_MOVEMENT
+		
+	j GAME_LOOP
+END_GAME_LOOP:
+
+#==================+
+#	EXIT	   |
+#==================+
 
 EXIT:
 	li a7, 10
@@ -80,6 +116,77 @@ EXIT:
 
 ############################################################################
 ############################################################################
+
+#============================+
+#	PLAYER_MOVEMENT	     |
+#============================+
+
+PLAYER_MOVEMENT:
+	li t0, 0xFF200004
+	lb t0, 0(t0)
+	
+	li t1, 'a'
+	beq t0, t1, PRESS_MENU_A
+	
+	li t1, 'd'
+	beq t0, t1, PRESS_MENU_D
+	
+	li t1, '\n' # Enter
+	beq t0, t1, MAKE_MOVEMENT
+	
+	ret
+
+PRESS_MENU_A:
+	addi a1, s3, -1
+	li t0, 5
+	bgt a1, t0, PLAYER_SELECTION
+	li a1, 12
+	j PLAYER_SELECTION
+PRESS_MENU_D:
+	addi a1, s3, 1
+	li t0, 13
+	blt a1, t0, PLAYER_SELECTION
+	li a1, 6
+PLAYER_SELECTION:
+	addi sp, sp, -8
+	sw ra, 0(sp)
+	sw a1, 4(sp)
+
+	li a0, 3
+	li a2, 5
+	li a3, 0
+	li a4, 0
+	
+	jal BLOCK_SELECTION
+
+	mv a1, s3
+	li a2, 1
+	jal BLOCK_SELECTION
+	
+	lw ra, 0(sp)
+	lw s3, 4(sp)
+	addi sp, sp, 8
+	ret	
+
+MAKE_MOVEMENT:
+	addi sp, sp, -4
+	sw ra, 0(sp)
+
+	addi t0, s3, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
+	la t1, CURRENT_HEIGHTS	# t1 = Height Address
+	add a0, t0, t1		# addr(CURRENT_HEIGHT) + Current Relative Col
+	
+	lb a0, 0(a0)
+	addi a0, a0, 9
+	mv a1, s3
+	li a2, 3
+	li a3, 0
+	li a4, 0
+	jal BLOCK_SELECTION
+	
+	lw ra, 0(sp)
+	addi sp, sp, 4
+	ret
 
 #=======================+
 #	PRINT MAP	|
@@ -136,6 +243,9 @@ CHANGE_MENU_POS:
 	li t1, 's'
 	beq t0, t1, PRESS_MENU_S
 	
+	li t1, '\n' # Enter
+	beq t0, t1, SELECTED_LEVEL
+	
 	ret
 PRESS_MENU_W:
 	addi a0, s0, -3
@@ -172,6 +282,27 @@ RENDER_MENU_INDICATOR:
 	lw ra, 0(sp)
 	addi sp, sp, 8
 	ret
+
+SELECTED_LEVEL:
+	li t0, 5
+	beq t0, s0, LEVEL_1
+	li t0, 8
+	beq t0, s0, LEVEL_2
+	li t0, 11
+	beq t0, s0, LEVEL_3
+LEVEL_1:
+	li s2, 1
+	j DEFINE_LEVEL
+LEVEL_2:
+	li s2, 2
+	j DEFINE_LEVEL
+LEVEL_3:
+	li s2, 3
+
+DEFINE_LEVEL:
+	la ra, RENDER_MAP
+	ret
+	
 #=============================+
 #	BLOCKS SELECTION      |
 #=============================+
