@@ -133,7 +133,7 @@ PLAYER_MOVEMENT:
 	beq t0, t1, PRESS_MENU_D
 	
 	li t1, '\n' # Enter
-	beq t0, t1, MAKE_MOVEMENT
+	beq t0, t1, PLAYER_MAKE_MOVE
 	
 	ret
 
@@ -167,11 +167,25 @@ PLAYER_SELECTION:
 	lw ra, 0(sp)
 	lw s3, 4(sp)
 	addi sp, sp, 8
-	ret	
+	ret
 
-MAKE_MOVEMENT: # a0 => Col, a1 => Pin
+PLAYER_MAKE_MOVE:
 	addi sp, sp, -4
 	sw ra, 0(sp)
+	
+	mv a0, s3
+	jal MAKE_MOVEMENT
+	
+	lw ra, 0(sp)
+	ret
+
+MAKE_MOVEMENT: # a0 => Col
+	addi sp, sp, -12
+	sw ra, 0(sp)
+	sw a0, 4(sp)
+	sw a1, 8(sp)
+
+	mv a1, a0
 
 	addi t0, s3, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
 	la t1, CURRENT_HEIGHTS	# t1 = Height Address
@@ -185,14 +199,13 @@ MAKE_MOVEMENT: # a0 => Col, a1 => Pin
 	sb t1, 0(t0)		# Storing new height
 	
 	# Rendering new pin
-	mv a1, s3
 	mv a2, s4
 	li a3, 0
 	li a4, 0
 	jal BLOCK_SELECTION
 
 	lw ra, 0(sp)
-	addi sp, sp, 4
+	addi sp, sp, 12
 	
 	li t0, 3
 	beq s4, t0, CHANGE_TO_PLAYER_TWO
