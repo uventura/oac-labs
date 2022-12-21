@@ -66,6 +66,7 @@ MAIN:
 	li s1, 5 # Menu Indicator Col Position
 	li s2, 1 # Dificult Level
 	li s3, 6 # Player Col
+	li s4, 3 # Current Player (The number is its sprite)
 
 	la a0, MAP_1
 	jal PRINT_MAP
@@ -168,24 +169,38 @@ PLAYER_SELECTION:
 	addi sp, sp, 8
 	ret	
 
-MAKE_MOVEMENT:
+MAKE_MOVEMENT: # a0 => Col, a1 => Pin
 	addi sp, sp, -4
 	sw ra, 0(sp)
 
 	addi t0, s3, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
 	la t1, CURRENT_HEIGHTS	# t1 = Height Address
-	add a0, t0, t1		# addr(CURRENT_HEIGHT) + Current Relative Col
+	add t0, t0, t1		# addr(CURRENT_HEIGHT) + Current Relative Col
 	
-	lb a0, 0(a0)
-	addi a0, a0, 9
+	lb a0, 0(t0)		# Getting the relative height of the pin
+	addi a0, a0, 9		# Getting screen height
+	
+	lb t1, 0(t0)		# Load height
+	addi t1, t1, -1		# t1 -= 1 => Increasing the height (Which is inverse)
+	sb t1, 0(t0)		# Storing new height
+	
+	# Rendering new pin
 	mv a1, s3
-	li a2, 3
+	mv a2, s4
 	li a3, 0
 	li a4, 0
 	jal BLOCK_SELECTION
-	
+
 	lw ra, 0(sp)
 	addi sp, sp, 4
+	
+	li t0, 3
+	beq s4, t0, CHANGE_TO_PLAYER_TWO
+	li s4, 3
+	j END_MAKE_MOVEMENT
+CHANGE_TO_PLAYER_TWO:
+	li s4, 4
+END_MAKE_MOVEMENT:
 	ret
 
 #=======================+
@@ -317,7 +332,7 @@ BLOCK_SELECTION:
 	li t0, 3
 	beq a2, t0, BLOCK_3	# if a2 == 3, then BLOCK_3
 	li t0, 4
-	beq a3, t0, BLOCK_4	# if a2 == 4, then BLOCK_3
+	beq a2, t0, BLOCK_4	# if a2 == 4, then BLOCK_3
 	li t0, 5
 	beq a2, t0, BLOCK_5	# if a2 == 5, then BLOCK_3
 	li t0, 6
