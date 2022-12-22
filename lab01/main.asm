@@ -94,6 +94,7 @@ MAIN:
 	li s3, 6 # Player Col
 	li s4, 3 # Current Player (The number is its sprite)
 	li s5, 0 # Won status
+	li s6, 0 # Pressed
 	
 	la a0, MAP_1
 	jal PRINT_MAP
@@ -132,6 +133,10 @@ GAME_LOOP:
 	jal PLAYER_MOVEMENT
 	
 	bnez s5, GAME_OVER
+	
+	jal AI_MOVEMENT
+	
+	li s6, 0
 		
 	j GAME_LOOP
 END_GAME_LOOP:
@@ -172,8 +177,33 @@ EXIT:
 #========================+
 
 AI_MOVEMENT:
-	li a7, 41
+	li t0, 1
+	beq s2, t0, AI_MOVEMENT_LEVEL_1
+	
+AI_MOVEMENT_END:
+	ret
+AI_MOVEMENT_LEVEL_1:
+	beqz s6, AI_MOVEMENT_END
+
+	li a7, 42
+	li a1, 7
+	li a0, 7
 	ecall
+	
+	addi sp, sp, -4
+	sw ra, 0(sp)
+	
+	addi a0, a0, 6
+	
+	li a7, 1
+	ecall
+	
+	jal MAKE_MOVEMENT
+	
+	lw ra, 0(sp)
+	addi sp, sp, 4
+
+	ret
 
 #============================+
 #	PLAYER_MOVEMENT	     |
@@ -227,6 +257,8 @@ PLAYER_SELECTION:
 	ret
 
 PLAYER_MAKE_MOVE:
+	li s6, 1	# Player Moved
+
 	addi sp, sp, -4
 	sw ra, 0(sp)
 	
@@ -245,7 +277,7 @@ MAKE_MOVEMENT: # a0 => Col
 
 	mv a1, a0
 
-	addi t0, s3, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
+	addi t0, a0, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
 	la t1, CURRENT_HEIGHTS	# t1 = Height Address
 	add t0, t0, t1		# addr(CURRENT_HEIGHT) + Current Relative Col
 	
