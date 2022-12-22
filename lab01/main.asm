@@ -93,7 +93,8 @@ MAIN:
 	li s2, 1 # Dificult Level
 	li s3, 6 # Player Col
 	li s4, 3 # Current Player (The number is its sprite)
-
+	li s5, 0 # Won status
+	
 	la a0, MAP_1
 	jal PRINT_MAP
 
@@ -129,9 +130,31 @@ GAME_LOOP:
 	# Change Indicator Position on Menu
 	beqz t1, GAME_LOOP
 	jal PLAYER_MOVEMENT
+	
+	bnez s5, GAME_OVER
 		
 	j GAME_LOOP
 END_GAME_LOOP:
+
+GAME_OVER:
+	# Reset Current Heights
+	la t0, CURRENT_HEIGHTS
+	sw zero, 0(t0)
+	sb zero, 4(t0)
+	sb zero, 5(t0)
+	
+	# Reset Current Game
+	la t0, CURRENT_GAME
+	li t1, 0
+	li t2, 42
+GAMER_OVER_LOOP:
+	beq t1, t2, END_GAMER_OVER_LOOP
+	sb zero, 0(t0)
+	addi t0, t0, 1
+	addi t1, t1, 1
+	j GAMER_OVER_LOOP
+END_GAMER_OVER_LOOP:
+	j MAIN
 
 #==================+
 #	EXIT	   |
@@ -251,13 +274,13 @@ MAKE_MOVEMENT: # a0 => Col
 	sb s4, 0(t0)		# Store player position
 	
 	mv a2, s4		# Player
-	jal WON
+	jal WON			# Verification if Won
 	
-	bnez a0, EXIT
-
+	mv s5, a0		# if Won, then a0 = 1
+	
 	lw ra, 0(sp)
 	addi sp, sp, 12
-	
+
 	li t0, 3
 	beq s4, t0, CHANGE_TO_PLAYER_TWO
 	li s4, 3
