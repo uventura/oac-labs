@@ -53,7 +53,7 @@ MAP_2:
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 	
-CURRENT_HEIGHTS: .byte 0,0,0,0,0,0,0
+CURRENT_HEIGHTS: .byte 0,0,0,0,0,0,0,0
 
 CURRENT_GAME:
 	.byte
@@ -94,7 +94,7 @@ MAIN:
 	li s3, 6 # Player Col
 	li s4, 3 # Current Player (The number is its sprite)
 	li s5, 0 # Won status
-	li s6, 0 # Pressed
+	li s6, 0 # Player moved
 	
 	la a0, MAP_1
 	jal PRINT_MAP
@@ -124,19 +124,30 @@ RENDER_MAP:
 	jal PRINT_MAP
 
 GAME_LOOP:
+	li s6, 0
+		
 	li t0, 0xFF200000
 	lw t1, 0(t0)
 	andi t1, t1, 0x00000001
 		
 	# Change Indicator Position on Menu
 	beqz t1, GAME_LOOP
+
 	jal PLAYER_MOVEMENT
+	li t0, -1
+	beq a0, t0, GAME_LOOP
 	
 	bnez s5, GAME_OVER
-	
+
+NEW_AI_MOVEMENT:
 	jal AI_MOVEMENT
 	
-	li s6, 0
+	li t0, -1
+	beq a0, t0, NEW_AI_MOVEMENT
+
+	bnez s5, GAME_OVER
+	
+	jal VERIFY_DRAW
 		
 	j GAME_LOOP
 END_GAME_LOOP:
@@ -147,6 +158,7 @@ GAME_OVER:
 	sw zero, 0(t0)
 	sb zero, 4(t0)
 	sb zero, 5(t0)
+	sb zero, 6(t0)
 	
 	# Reset Current Game
 	la t0, CURRENT_GAME
@@ -172,6 +184,27 @@ EXIT:
 ############################################################################
 ############################################################################
 
+#=======================+
+#	VERIFY_DRAW	|
+#=======================+
+VERIFY_DRAW:
+	li t0, 6
+	la t1, CURRENT_HEIGHTS
+	li t2, 0
+	li t3, 7
+
+LOOP_VERIFY_DRAW:
+	beq t2, t3, END_LOOP_VERIFY_DRAW
+	lb t4, 0(t1)
+	bne t4, t0, END_VERIFY_DRAW
+	addi t2, t2, 1
+	j LOOP_VERIFY_DRAW
+END_LOOP_VERIFY_DRAW:
+	j GAME_OVER
+
+END_VERIFY_DRAW:
+	ret
+
 #========================+
 #	AI_MOVEMENT	 |
 #========================+
@@ -180,23 +213,28 @@ AI_MOVEMENT:
 	li t0, 1
 	beq s2, t0, AI_MOVEMENT_LEVEL_1
 	
+	li t0, 2
+	beq s2, t0, AI_MOVEMENT_LEVEL_1
+	
+	li t0, 3
+	beq s2, t0, AI_MOVEMENT_LEVEL_1
+	
 AI_MOVEMENT_END:
 	ret
 AI_MOVEMENT_LEVEL_1:
 	beqz s6, AI_MOVEMENT_END
+	
+	addi sp, sp, -4
+	sw ra, 0(sp)
 
+	# Generate random position
 	li a7, 42
 	li a1, 7
 	li a0, 7
 	ecall
 	
-	addi sp, sp, -4
-	sw ra, 0(sp)
-	
+	# Fix position
 	addi a0, a0, 6
-	
-	li a7, 1
-	ecall
 	
 	jal MAKE_MOVEMENT
 	
@@ -277,7 +315,7 @@ MAKE_MOVEMENT: # a0 => Col
 
 	mv a1, a0
 
-	addi t0, a0, -6		# s3 = Col => t0 = s3 - 6 = Current Relative Col
+	addi t0, a0, -6		# s3 = Col => t0 = a0 - 6 = Current Relative Col
 	la t1, CURRENT_HEIGHTS	# t1 = Height Address
 	add t0, t0, t1		# addr(CURRENT_HEIGHT) + Current Relative Col
 	
@@ -285,7 +323,12 @@ MAKE_MOVEMENT: # a0 => Col
 	addi a0, a0, 9		# Getting screen height
 	
 	lb t1, 0(t0)		# Load height
+	
 	addi t1, t1, -1		# t1 -= 1 => Increasing the height (Which is inverse)
+	
+	li t2, -7
+	beq t1, t2, CANNOT_MOVE
+
 	sb t1, 0(t0)		# Storing new height
 	
 	# Rendering new pin
@@ -320,6 +363,11 @@ MAKE_MOVEMENT: # a0 => Col
 CHANGE_TO_PLAYER_TWO:
 	li s4, 4
 END_MAKE_MOVEMENT:
+	ret
+CANNOT_MOVE:
+	lw ra, 0(sp)
+	addi sp, sp, 12
+	li a0, -1
 	ret
 
 #=================+
