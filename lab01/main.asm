@@ -214,7 +214,7 @@ AI_MOVEMENT:
 	beq s2, t0, AI_MOVEMENT_LEVEL_1
 	
 	li t0, 2
-	beq s2, t0, AI_MOVEMENT_LEVEL_1
+	beq s2, t0, AI_MOVEMENT_LEVEL_2
 	
 	li t0, 3
 	beq s2, t0, AI_MOVEMENT_LEVEL_1
@@ -242,6 +242,17 @@ AI_MOVEMENT_LEVEL_1:
 	addi sp, sp, 4
 
 	ret
+
+AI_MOVEMENT_LEVEL_2:
+	addi sp, sp, -4
+	sw ra, 0(sp)
+	
+	li a0, 4
+	jal AI_LOOK_AROUND
+	jal MAKE_MOVEMENT
+	
+	lw ra, 0(sp)
+	addi sp, sp, 4
 
 #============================+
 #	PLAYER_MOVEMENT	     |
@@ -368,6 +379,59 @@ CANNOT_MOVE:
 	lw ra, 0(sp)
 	addi sp, sp, 12
 	li a0, -1
+	ret
+
+#=================================================+
+#	AI LOOK AROUND TO FIND BEST POSITION	  |
+#=================================================+
+
+AI_LOOK_AROUND: # a0 = Player Selection
+# Return the Best col in a0
+	addi sp, sp, -28
+	sw s0, 0(sp)
+	sw s1, 4(sp)
+	sw s2, 8(sp)
+	sw s3, 12(sp)
+	sw s4, 16(sp)
+	sw s5, 20(sp)
+	sw ra, 24(sp)
+
+	la s0, CURRENT_HEIGHTS
+	li s1, 0	# Counter
+	li s2, 6	# Maximum
+	mv s3, a0	# Player Selection
+	li s4, 0	# Selected col
+	li s5, 0	# Points in Selected col
+
+LOOP_AI_LOOK_AROUND:
+	beq s1, s2, END_AI_LOOK_AROUND
+
+	add a0, s1, s0
+	lb a0, 0(a0)	
+	mv a1, s1
+	mv a2, s3
+	jal WON
+	
+	bgt s5, a0, SKIP_COL_AI
+	mv s4, s1
+	mv s5, a0
+SKIP_COL_AI:
+	
+	addi s1, s1, 1
+	j LOOP_AI_LOOK_AROUND
+
+END_AI_LOOK_AROUND:
+	mv a0, s4
+
+	lw s0, 0(sp)
+	lw s1, 4(sp)
+	lw s2, 8(sp)
+	lw s3, 12(sp)
+	lw s4, 16(sp)
+	lw s5, 20(sp)
+	lw ra, 24(sp)
+	addi sp, sp, 28
+
 	ret
 
 #=================+
