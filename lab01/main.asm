@@ -438,12 +438,12 @@ DIR_PIECES_LOOP:
 	li t5, 0
 	blt t2, t5, END_DIR_PIECES_LOOP
 	li t5, 6
-	bgt t2, t5, END_DIR_PIECES_LOOP
+	ble t5, t2, END_DIR_PIECES_LOOP
 	# Col Analyzer
 	li t5, 0
 	blt t3, t5, END_DIR_PIECES_LOOP
 	li t5, 7
-	bgt t3, t5, END_DIR_PIECES_LOOP
+	ble t5, t3, END_DIR_PIECES_LOOP
 
 	li t4, 7
 	mul t4, t4, t2 	# Current_line * 7
