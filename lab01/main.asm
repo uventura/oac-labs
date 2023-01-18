@@ -138,7 +138,7 @@ GAME_LOOP:
 	beq a0, t0, GAME_LOOP
 	
 	li t0, 3
-	beq s5, t0, GAME_OVER
+	ble t0, s5, GAME_OVER
 
 NEW_AI_MOVEMENT:
 	jal AI_MOVEMENT
