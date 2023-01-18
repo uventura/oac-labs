@@ -426,6 +426,15 @@ LOOP_AI_LOOK_AROUND:
 	jal WON
 	
 	bgt s5, a0, SKIP_COL_AI
+	
+	# Verify if is a valid col
+	add t0, s0, s1		# t0 = CURRENT_HEIGHTS + Column_Counter = Height Addres
+	lb t0, 0(t0)		# Get Height = current_height
+	addi t0, t0, 6
+	
+	li t1, 0		 # Max Height
+	ble t0, t1, SKIP_COL_AI  # if max_height <= current_height => Skip Col
+	
 	mv s4, s1
 	mv s5, a0
 SKIP_COL_AI:
