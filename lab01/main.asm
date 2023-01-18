@@ -221,7 +221,7 @@ AI_MOVEMENT:
 	beq s2, t0, AI_MOVEMENT_LEVEL_2
 	
 	li t0, 3
-	beq s2, t0, AI_MOVEMENT_LEVEL_1
+	beq s2, t0, AI_MOVEMENT_LEVEL_3
 	
 AI_MOVEMENT_END:
 	ret
@@ -259,6 +259,33 @@ AI_MOVEMENT_LEVEL_2:
 	
 	lw ra, 0(sp)
 	addi sp, sp, 4
+	ret
+
+AI_MOVEMENT_LEVEL_3:
+	addi sp, sp, -12
+	sw ra, 0(sp)
+	sw s0, 4(sp)
+	sw s1, 8(sp)
+	
+	li a0, 4
+	jal AI_LOOK_AROUND
+	
+	mv s0, a0		# Best Col
+	mv s1, a1		# Max Points
+
+	li a0, 3
+	jal AI_LOOK_AROUND
+
+	bgt a1, s1, AI_MOVE_3_AGAINTS_PLAYER
+	mv a0, s0
+AI_MOVE_3_AGAINTS_PLAYER:
+	addi a0, a0, 6
+	jal MAKE_MOVEMENT
+	
+	lw ra, 0(sp)
+	lw s0, 4(sp)
+	lw s1, 8(sp)
+	addi sp, sp, 12
 	ret
 
 #============================+
@@ -444,6 +471,7 @@ SKIP_COL_AI:
 
 END_AI_LOOK_AROUND:
 	mv a0, s4
+	mv a1, s5
 
 	lw s0, 0(sp)
 	lw s1, 4(sp)
