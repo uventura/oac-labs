@@ -137,15 +137,19 @@ GAME_LOOP:
 	li t0, -1
 	beq a0, t0, GAME_LOOP
 	
-	bnez s5, GAME_OVER
+	li t0, 3
+	beq s5, t0, GAME_OVER
 
 NEW_AI_MOVEMENT:
 	jal AI_MOVEMENT
 	
 	li t0, -1
 	beq a0, t0, NEW_AI_MOVEMENT
+	
+	# ebreak
 
-	bnez s5, GAME_OVER
+	li t0, 3
+	beq s5, t0, GAME_OVER
 	
 	jal VERIFY_DRAW
 		
@@ -249,10 +253,13 @@ AI_MOVEMENT_LEVEL_2:
 	
 	li a0, 4
 	jal AI_LOOK_AROUND
+
+	addi a0, a0, 6
 	jal MAKE_MOVEMENT
 	
 	lw ra, 0(sp)
 	addi sp, sp, 4
+	ret
 
 #============================+
 #	PLAYER_MOVEMENT	     |
@@ -271,6 +278,7 @@ PLAYER_MOVEMENT:
 	li t1, '\n' # Enter
 	beq t0, t1, PLAYER_MAKE_MOVE
 	
+	li a0, -1
 	ret
 
 PRESS_MENU_A:
@@ -303,6 +311,8 @@ PLAYER_SELECTION:
 	lw ra, 0(sp)
 	lw s3, 4(sp)
 	addi sp, sp, 8
+	
+	li a0, -1		# Player Moved to left
 	ret
 
 PLAYER_MAKE_MOVE:
@@ -362,6 +372,7 @@ MAKE_MOVEMENT: # a0 => Col
 	mv a2, s4		# Player
 	jal WON			# Verification if Won
 	
+	# ebreak
 	mv s5, a0		# if Won, then a0 = 1
 	
 	lw ra, 0(sp)
@@ -398,7 +409,7 @@ AI_LOOK_AROUND: # a0 = Player Selection
 
 	la s0, CURRENT_HEIGHTS
 	li s1, 0	# Counter
-	li s2, 6	# Maximum
+	li s2, 7	# Maximum
 	mv s3, a0	# Player Selection
 	li s4, 0	# Selected col
 	li s5, 0	# Points in Selected col
@@ -407,7 +418,9 @@ LOOP_AI_LOOK_AROUND:
 	beq s1, s2, END_AI_LOOK_AROUND
 
 	add a0, s1, s0
-	lb a0, 0(a0)	
+	lb a0, 0(a0)
+	addi a0, a0, 5
+	
 	mv a1, s1
 	mv a2, s3
 	jal WON
@@ -441,16 +454,18 @@ END_AI_LOOK_AROUND:
 WON: # a0 => Row, a1 => Col, a2 => Number
 # Pos(i, j) = Addr + i * num_cols + j
 
-	addi sp, sp, -20
+	addi sp, sp, -24
 	sw ra, 0(sp)
 	sw s0, 4(sp)
 	sw s1, 8(sp)
 	sw s2, 12(sp)
 	sw a0, 16(sp)
+	sw s3, 20(sp)
 
 	li s0, 0		# Counter
 	la s1, DIRECTIONS_WON
 	li s2, 0		# Sums
+	li s3, 0		# Max Points
 	mv a4, a2
 
 LOOP_WON:
@@ -469,25 +484,29 @@ LOOP_WON:
 
 	add a0, a0, s2
 
+	bgt s3, a0, LESS_POINTS_WON	# Verify if got max points
+	mv s3, a0
+LESS_POINTS_WON:
+
 	li t0, 3
-	beq a0, t0, PLAYER_WON
+	beq a0, t0, END_LOOP_WON
 	
 	addi s0, s0, 1
 	addi s1, s1, 4
-	li t0, 4
-	beq s0, t0, PLAYER_NOT_WON
+	li t0, 3
+
+	beq s0, t0, END_LOOP_WON
 	j LOOP_WON
-PLAYER_WON:
-	li a0, 1
-	j END_LOOP_WON
-PLAYER_NOT_WON:
-	li a0, 0
 END_LOOP_WON:
+	# ebreak
+	mv a0, s3
+
 	lw ra, 0(sp)
 	lw s0, 4(sp)
 	lw s1, 8(sp)
 	lw s2, 12(sp)
-	addi sp, sp, 20
+	lw s3, 20(sp)
+	addi sp, sp, 24
 	ret
 
 DIRECTION_PIECES: # a0 => rel. line, a1 => rel. col, a2 => mov. line, a3 => mov. col, a4 => player
