@@ -141,12 +141,15 @@ GAME_LOOP:
 	ble t0, s5, GAME_OVER
 
 NEW_AI_MOVEMENT:
+
+	csrr s7, cycle
 	jal AI_MOVEMENT
+	csrr s8, cycle
+	
+	sub a6, s8, s7
 	
 	li t0, -1
 	beq a0, t0, NEW_AI_MOVEMENT
-	
-	# ebreak
 
 	li t0, 3
 	beq s5, t0, GAME_OVER
@@ -178,7 +181,7 @@ END_GAMER_OVER_LOOP:
 	j MAIN
 
 #==================+
-#	EXIT	   |
+#	EXIT
 #==================+
 
 EXIT:
@@ -218,7 +221,7 @@ AI_MOVEMENT:
 	beq s2, t0, AI_MOVEMENT_LEVEL_1
 	
 	li t0, 2
-	beq s2, t0, AI_MOVEMENT_LEVEL_2
+	beq s2, t0, AI_MOVEMENT_LEVEL_2	
 	
 	li t0, 3
 	beq s2, t0, AI_MOVEMENT_LEVEL_3
@@ -232,10 +235,14 @@ AI_MOVEMENT_LEVEL_1:
 	sw ra, 0(sp)
 
 	# Generate random position
-	li a7, 42
-	li a1, 7
-	li a0, 7
-	ecall
+	csrr a0, 3073
+	li t6, 7
+	remu a0, a0, t6
+	# ebreak
+	# li a7, 42
+	# li a1, 7
+	# li a0, 7
+	# ecall
 	
 	# Fix position
 	addi a0, a0, 6
@@ -732,7 +739,7 @@ BLOCK_SELECTION:
 	li t0, 14
 	beq a2, t0, BLOCK_14	# if a2 == 14, then BLOCK_14
 	li t0, 15
-	beq a2, t0, BLOCK_15	# if a2 == 14, then BLOCK_14
+	beq a2, t0, BLOCK_15	# if a2 == 15, then BLOCK_15
 	ret
 BLOCK_1:
 	la a2, block_background
